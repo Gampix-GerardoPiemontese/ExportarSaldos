@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exportar Saldos a Google Drive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input[type="date"] {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input[type="date"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        small {
+            display: block;
+            margin-top: 8px;
+            color: #999;
+            font-size: 13px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #resultado {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .success {
+            background-color: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+
+        .loading {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+        }
+
+        .resultado-header {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .resultado-item {
+            margin: 8px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .resultado-item:last-child {
+            border-bottom: none;
+        }
+
+        .resultado-label {
+            font-weight: 600;
+            display: inline-block;
+            min-width: 140px;
+        }
+
+        .drive-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 12px 20px;
+            background: #4285f4;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .drive-link:hover {
+            background: #3367d6;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(66, 133, 244, 0.3);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .config-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .config-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        #webhookUrl {
+            width: 100%;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            color: #004085;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Exportar Saldos a Google Drive</h1>
+        <p class="subtitle">Sistema de exportación de saldos de jugadores por fecha</p>
+
+        <!-- Sección de configuración -->
+        <div class="config-section">
+            <div class="config-title">⚙️ Configuración del Webhook</div>
+            <input
+                type="text"
+                id="webhookUrl"
+                placeholder="https://tu-instancia-n8n.com/webhook/exportar-saldos"
+                value=""
+            />
+            <small>Ingresa la URL del webhook de n8n. Esta configuración se guardará en tu navegador.</small>
+        </div>
+
+        <div class="alert" id="configAlert" style="display: none;">
+            ⚠️ <strong>Importante:</strong> Debes configurar la URL del webhook antes de continuar.
+        </div>
+
+        <!-- Formulario -->
+        <form id="formExportar">
+            <div class="form-group">
+                <label for="fechaConsulta">📅 Fecha a consultar:</label>
+                <input
+                    type="date"
+                    id="fechaConsulta"
+                    name="fechaConsulta"
+                    required
+                    max=""
+                />
+                <small>Selecciona la fecha para obtener los saldos de los jugadores</small>
+            </div>
+
+            <button type="submit" id="btnExportar">
+                Exportar Saldos
+            </button>
+        </form>
+
+        <!-- Resultado -->
+        <div id="resultado"></div>
+    </div>
+
+    <script>
+        // Configuración del localStorage
+        const STORAGE_KEY = 'n8n_webhook_url';
+
+        // Cargar URL guardada
+        const webhookUrlInput = document.getElementById('webhookUrl');
+        const savedUrl = localStorage.getItem(STORAGE_KEY);
+        if (savedUrl) {
+            webhookUrlInput.value = savedUrl;
+        }
+
+        // Guardar URL cuando cambie
+        webhookUrlInput.addEventListener('change', (e) => {
+            const url = e.target.value.trim();
+            if (url) {
+                localStorage.setItem(STORAGE_KEY, url);
+                document.getElementById('configAlert').style.display = 'none';
+            }
+        });
+
+        // Establecer fecha máxima como hoy
+        const inputFecha = document.getElementById('fechaConsulta');
+        inputFecha.max = new Date().toISOString().split('T')[0];
+
+        // Establecer fecha por defecto como ayer
+        const ayer = new Date();
+        ayer.setDate(ayer.getDate() - 1);
+        inputFecha.value = ayer.toISOString().split('T')[0];
+
+        // Manejo del formulario
+        document.getElementById('formExportar').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const webhookUrl = webhookUrlInput.value.trim();
+
+            // Validar que se haya configurado la URL
+            if (!webhookUrl) {
+                document.getElementById('configAlert').style.display = 'block';
+                webhookUrlInput.focus();
+                return;
+            }
+
+            const fechaConsulta = document.getElementById('fechaConsulta').value;
+            const btnExportar = document.getElementById('btnExportar');
+            const resultado = document.getElementById('resultado');
+
+            // Mostrar estado de carga
+            btnExportar.disabled = true;
+            btnExportar.innerHTML = '<span class="spinner"></span>Exportando...';
+            resultado.style.display = 'block';
+            resultado.className = 'loading';
+            resultado.innerHTML = `
+                <div class="resultado-header">⏳ Procesando...</div>
+                <div>Por favor espera, esto puede tomar varios minutos dependiendo del volumen de datos.</div>
+            `;
+
+            try {
+                const startTime = Date.now();
+
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ fechaConsulta })
+                });
+
+                const data = await response.json();
+                const endTime = Date.now();
+                const clientDuration = Math.round((endTime - startTime) / 1000);
+
+                if (data.status === 'success') {
+                    resultado.className = 'success';
+                    resultado.innerHTML = `
+                        <div class="resultado-header">✅ Exportación completada exitosamente</div>
+                        <div class="resultado-item">
+                            <span class="resultado-label">Fecha consultada:</span>
+                            <span>${data.data.fechaConsulta}</span>
+                        </div>
+                        <div class="resultado-item">
+                            <span class="resultado-label">Total de registros:</span>
+                            <span>${data.data.totalRegistros.toLocaleString()}</span>
+                        </div>
+                        <div class="resultado-item">
+                            <span class="resultado-label">Nombre del archivo:</span>
+                            <span>${data.data.archivo.nombre}</span>
+                        </div>
+                        <div class="resultado-item">
+                            <span class="resultado-label">Tamaño:</span>
+                            <span>${formatBytes(data.data.archivo.tamano)}</span>
+                        </div>
+                        <div class="resultado-item">
+                            <span class="resultado-label">Duración:</span>
+                            <span>${data.data.ejecucion.duracionSegundos}s (servidor) / ${clientDuration}s (total)</span>
+                        </div>
+                        <div class="resultado-item">
+                            <span class="resultado-label">Carpeta:</span>
+                            <span>${data.data.archivo.carpeta}</span>
+                        </div>
+                        <a href="${data.data.archivo.url}" target="_blank" class="drive-link">
+                            📥 Abrir archivo en Google Drive
+                        </a>
+                    `;
+                } else {
+                    throw new Error(data.message || 'Error desconocido');
+                }
+            } catch (error) {
+                resultado.className = 'error';
+                resultado.innerHTML = `
+                    <div class="resultado-header">❌ Error en la exportación</div>
+                    <div class="resultado-item">
+                        <strong>Mensaje:</strong> ${error.message}
+                    </div>
+                    <div class="resultado-item" style="margin-top: 15px; font-size: 13px;">
+                        <strong>Posibles causas:</strong>
+                        <ul style="margin-top: 8px; margin-left: 20px;">
+                            <li>La URL del webhook no es correcta</li>
+                            <li>El workflow de n8n no está activo</li>
+                            <li>Error de conexión con la base de datos</li>
+                            <li>Timeout por volumen de datos muy grande</li>
+                        </ul>
+                    </div>
+                `;
+            } finally {
+                btnExportar.disabled = false;
+                btnExportar.innerHTML = 'Exportar Saldos';
+            }
+        });
+
+        // Función auxiliar para formatear bytes
+        function formatBytes(bytes) {
+            if (!bytes) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>
