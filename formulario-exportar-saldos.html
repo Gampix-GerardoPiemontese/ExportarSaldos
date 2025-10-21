@@ -350,36 +350,73 @@
 
                 if (data.status === 'success') {
                     resultado.className = 'success';
-                    resultado.innerHTML = `
+
+                    // Construir HTML con validaciones para datos opcionales
+                    let htmlContent = `
                         <div class="resultado-header">✅ Exportación completada exitosamente</div>
                         <div class="resultado-item">
                             <span class="resultado-label">Fecha consultada:</span>
-                            <span>${data.data.fechaConsulta}</span>
+                            <span>${fechaConsulta}</span>
                         </div>
                         <div class="resultado-item">
-                            <span class="resultado-label">Total de registros:</span>
-                            <span>${data.data.totalRegistros.toLocaleString()}</span>
+                            <span class="resultado-label">Duración total:</span>
+                            <span>${clientDuration}s</span>
                         </div>
-                        <div class="resultado-item">
-                            <span class="resultado-label">Nombre del archivo:</span>
-                            <span>${data.data.archivo.nombre}</span>
-                        </div>
-                        <div class="resultado-item">
-                            <span class="resultado-label">Tamaño:</span>
-                            <span>${formatBytes(data.data.archivo.tamano)}</span>
-                        </div>
-                        <div class="resultado-item">
-                            <span class="resultado-label">Duración:</span>
-                            <span>${data.data.ejecucion.duracionSegundos}s (servidor) / ${clientDuration}s (total)</span>
-                        </div>
-                        <div class="resultado-item">
-                            <span class="resultado-label">Carpeta:</span>
-                            <span>${data.data.archivo.carpeta}</span>
-                        </div>
-                        <a href="${data.data.archivo.url}" target="_blank" class="drive-link">
-                            📥 Abrir archivo en Google Drive
-                        </a>
                     `;
+
+                    // Agregar información opcional si está disponible
+                    if (data.data?.totalRegistros) {
+                        htmlContent += `
+                            <div class="resultado-item">
+                                <span class="resultado-label">Total de registros:</span>
+                                <span>${data.data.totalRegistros.toLocaleString()}</span>
+                            </div>
+                        `;
+                    }
+
+                    if (data.data?.archivo?.nombre) {
+                        htmlContent += `
+                            <div class="resultado-item">
+                                <span class="resultado-label">Nombre del archivo:</span>
+                                <span>${data.data.archivo.nombre}</span>
+                            </div>
+                        `;
+                    }
+
+                    if (data.data?.archivo?.tamano) {
+                        htmlContent += `
+                            <div class="resultado-item">
+                                <span class="resultado-label">Tamaño:</span>
+                                <span>${formatBytes(data.data.archivo.tamano)}</span>
+                            </div>
+                        `;
+                    }
+
+                    if (data.data?.archivo?.carpeta) {
+                        htmlContent += `
+                            <div class="resultado-item">
+                                <span class="resultado-label">Carpeta:</span>
+                                <span>${data.data.archivo.carpeta}</span>
+                            </div>
+                        `;
+                    }
+
+                    if (data.data?.archivo?.url) {
+                        htmlContent += `
+                            <a href="${data.data.archivo.url}" target="_blank" class="drive-link">
+                                📥 Abrir archivo en Google Drive
+                            </a>
+                        `;
+                    } else {
+                        htmlContent += `
+                            <div class="resultado-item" style="margin-top: 15px; padding: 15px; background: #e7f3ff; border-radius: 8px;">
+                                <strong>✓ El archivo se exportó correctamente a Google Drive.</strong><br>
+                                <small>Busca el archivo "saldos_${fechaConsulta}.csv" en la carpeta "Sportsbet PBA - Saldos a Fecha"</small>
+                            </div>
+                        `;
+                    }
+
+                    resultado.innerHTML = htmlContent;
                 } else {
                     throw new Error(data.message || 'Error desconocido');
                 }
